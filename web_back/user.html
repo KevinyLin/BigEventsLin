@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/iconfont.css">
     <link rel="stylesheet" href="css/main.css">
     <script src="js/jquery-1.12.4.min.js"></script>
+    <script src="./js/bootstrap/js/bootstrap.min.js"></script>
 
 </head>
 
@@ -24,38 +25,41 @@
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">用户名称：</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control username" id="inputEmail3" value="李思思">
+                        <input type="text" class="form-control username" name="username" id="inputEmail3" value="李思思">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">昵称：</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control nickname" id="inputEmail3" value="思思">
+                        <input type="text" class="form-control nickname" name="nickname" id="inputEmail3" value="思思">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">邮箱：</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control email" id="inputEmail3" value="lisisi@126.com">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
-                    <div class="col-sm-10">
-                        <img src="images/2.jpg" alt="" class="user_pic">
-                        <input type="file" id="exampleInputFile">
+                        <input type="text" class="form-control email" name="email" id="inputEmail3"
+                            value="lisisi@126.com">
                     </div>
                 </div>
 
                 <div class="form-group">
-                        <label for="inputEmail3" class="col-sm-2 control-label">密码：</label>
-                        <div class="col-sm-4">
-                            <input type="password" class="form-control password" id="inputEmail3" value="12345678">
-                        </div>
+                    <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
+                    <div class="col-sm-10">
+                        <img src="images/2.jpg" alt="" class="user_pic">
+                        <input type="file" id="exampleInputFile" style="opacity: 0;" name="user_pic">
+                        <label for="exampleInputFile"><img src="./images/uploadFileIcon.png" alt=""></label>
                     </div>
-               
-    
+                </div>
+
+                <div class="form-group">
+                    <label for="inputEmail3" class="col-sm-2 control-label">密码：</label>
+                    <div class="col-sm-4">
+                        <input type="password" class="form-control password" name="password" id="inputEmail3"
+                            value="12345678">
+                    </div>
+                </div>
+
+
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
                         <button type="submit" class="btn btn-success">修改</button>
@@ -65,16 +69,35 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">提示框</h4>
+                </div>
+                <div class="modal-body">
+                    修改成功
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        $(function(){
+        $(function () {
             $.ajax({
-                type:'get',
-                url:'http://localhost:8000/admin/userinfo_get',
-                success:function(backDate){
-                    for(var key in backDate.data){
+                type: 'get',
+                url: 'http://localhost:8000/admin/userinfo_get',
+                success: function (backDate) {
+                    for (var key in backDate.data) {
                         $('input.' + key).val(backDate.data[key]);
                     }
-                    $('img').attr('src',backDate.data.user_pic);
+                    $('img.user_pic').attr('src', backDate.data.user_pic);
                 }
             })
             /*
@@ -82,6 +105,45 @@
             1. 进入个人中心之后
             2. 调用获取用户详细信息接口
             3. 数据获取到之后 渲染到 页面上
+            */
+
+            $('#exampleInputFile').on('change', function () {
+                var icon = this.files[0];
+                var url = URL.createObjectURL(icon);
+                $('img.user_pic').attr('src', url);
+            })
+            /*
+            步骤
+            1. 为input file 绑定change事件 
+            2. 获取this.files[0]
+            3. 调用方法生成url
+            4. 设置给隔壁的img即可
+            */
+
+            $('.btn-success').on('click', function (e) {
+                e.preventDefault();
+                var formData = new FormData($('form')[0]);
+                $.ajax({
+                    type: 'post',
+                    url: 'http://localhost:8000/admin/userinfo_edit',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (backDate) {
+                        if (backDate.code == 200) {
+                            $('#myModal').modal({
+                                keyboard: true,
+                            })
+                        }
+                    }
+                })
+            })
+            /*
+            步骤
+            1. 为修改按钮绑定点击事件
+            2. 获取表单数据
+            3. 通过ajax 结合formData发送到服务器
+            4. 返回数据之后，提示用户
             */
         })
     </script>
