@@ -90,6 +90,7 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                        <input type="hidden" name="id" id="recipient-id">
                         <div class="form-group">
                             <label for="recipient-name" class="control-label">分类名称:</label>
                             <input type="text" class="form-control" id="recipient-name">
@@ -138,12 +139,6 @@
             $('#addModal').modal('hide');
         });
 
-        $('.category_table').delegate('a', 'click', function () {
-            if ($(this).hasClass('btn-info')) {
-                $('#addModal .modal-title').html('修改分类名称');
-                $('#addModal').modal('show');
-            }
-        })      
     </script>
     <script id="tmp_ctg" type="text/html">
         {{each data}}
@@ -151,7 +146,7 @@
             <td>{{$value.name}}</td>
             <td>{{$value.slug}}</td>
             <td class="text-center">
-                <a href="javascript:;" data-id="{{$value.id}}" class="btn btn-info btn-xs">编辑</a>
+                <a href="javascript:;" data-id="{{$value.id}}" class="btn btn-info btn-xs btn-bj">编辑</a>
                 <a href="javascript:;" data-id="{{$value.id}}" class="btn btn-danger btn-xs btn-del">删除</a>
             </td>
         </tr>
@@ -179,6 +174,7 @@
     */
 
         $('#model_add').click(function () {
+
             var recipient_name = $('#recipient-name').val();
             var recipient_slug = $('#recipient-slug').val();
             $.ajax({
@@ -222,19 +218,57 @@
             4. 重新获取数据
         */
 
+
+
+        //编辑按钮点击事件
+        $('tbody').on('click', 'a.btn-bj', function () {
+            var id = $(this).attr('data-id');
+            var name = $(this).parent().prev().prev().text();
+            var slug = $(this).parent().prev().text();
+            $('#recipient-id').val(id);
+            $('#recipient-name').val(name);
+            $('#recipient-slug').val(slug);
+            $('#model_add').addClass('btn-success').text('保存');
+            $('#addModal .modal-title').html('修改分类名称');
+            $('#addModal').modal('show');
+        })
+
+        //新增分类按钮点击事件,还原模态框
+        $('#addModal').on('click', function () {
+            $('#model_add').removeClass('btn-success').text('新增');
+            $('#addModal .modal-title').html('新增分类');
+        })
+
+
+
+        /*
+        分类编辑
+        步骤:
+        1.委托的方式给编辑按钮注册事件. 给编辑按钮设置自定义属性data-id保存要删除的这一条数据的id.
+        点击新增分类按钮  和点击 编辑按钮, 弹出来的模态框是同一个.
+        ​       点击编辑按钮  弹出的模态框,要修改他的title,还有他的   保存按钮名字,还有样式
+        ​       点击新增分类按钮,  弹出的模态框 里面的信息要还原.
+        2.弹出的模态框是同一个, 那点击模态框里面的 新增/保存 按钮 就要做判断(是新增还是编辑);
+        3.点击编辑, 把当前编辑的这一条数据的 分类名称  和分类 别名  显示在模态框.
+        4.点击编辑按钮,, 弹出模态框,, 点击模态框中的保存
+        ​    获取用户修改后的文章类别名称 和别名,  发送ajax请求.修改
+        */
+
+
+
         //删除类别功能
-        $('tbody').on('click','.btn-del',function(){
+        $('tbody').on('click', '.btn-del', function () {
             var id = $(this).attr('data-id');
             var that = $(this);
             $.ajax({
-                type:'post',
-                url:'http://localhost:8000/admin/category_delete',
-                data:{
-                    id:id
+                type: 'post',
+                url: 'http://localhost:8000/admin/category_delete',
+                data: {
+                    id: id
                 },
-                success:function(backData){
+                success: function (backData) {
                     console.log(backData);
-                    if(backData.code == 200){
+                    if (backData.code == 200) {
                         that.parent().parent().remove();
                     }
                 }
