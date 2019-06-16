@@ -73,7 +73,7 @@
                 <tfoot>
                     <tr>
                         <td colspan="3" class="text-center">
-                            <a href="#" class="btn btn-success" data-toggle="modal" data-target="#addModal">新增分类</a>
+                            <a href="#" id="addCategory" class="btn btn-success" data-toggle="modal" data-target="#addModal">新增分类</a>
                         </td>
                     </tr>
                 </tfoot>
@@ -93,11 +93,11 @@
                         <input type="hidden" name="id" id="recipient-id">
                         <div class="form-group">
                             <label for="recipient-name" class="control-label">分类名称:</label>
-                            <input type="text" class="form-control" id="recipient-name">
+                            <input type="text" name="name" class="form-control" id="recipient-name">
                         </div>
                         <div class="form-group">
                             <label for="recipient-slug" class="control-label">分类别名:</label>
-                            <input type="text" class="form-control" id="recipient-slug">
+                            <input type="text" name="slug" class="form-control" id="recipient-slug">
                         </div>
                     </form>
                 </div>
@@ -108,26 +108,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 模态框Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">提示框</h4>
-                </div>
-                <div class="modal-body">
-                    增加失败
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">确认</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         $('#addModal').modal({
             show: false,
@@ -155,134 +135,158 @@
 
     <script>
         $(function () {
-            $.ajax({
-                type: 'get',
-                url: 'http://localhost:8000/admin/category_search',
-                success: function (backDate) {
-                    var resHtml = template('tmp_ctg', backDate);
-                    $('tbody').html(resHtml);
-                }
-            })
-        })
-        /*
-      获取文章分类信息
-      步骤
-      1. 进入页面之后
-      2. 通过ajax获取数据
-      3. 数据获取到之后渲染到页面上
-      1. 结合模板引擎来渲染
-    */
+            //文章渲染函数
+            function getcat() {
+                $.ajax({
+                    type: 'get',
+                    url: 'http://localhost:8000/admin/category_search',
+                    success: function (backDate) {
+                        var resHtml = template('tmp_ctg', backDate);
+                        $('tbody').html(resHtml);
+                    }
+                })
+            }
 
-        $('#model_add').click(function () {
-
-            var recipient_name = $('#recipient-name').val();
-            var recipient_slug = $('#recipient-slug').val();
-            $.ajax({
-                type: 'post',
-                url: 'http://localhost:8000/admin/category_add',
-                data: {
-                    name: recipient_name,
-                    slug: recipient_slug
-                },
-                success: function (backDate) {
-                    if (backDate.code == 200) {
-                        $.ajax({
-                            type: 'get',
-                            url: 'http://localhost:8000/admin/category_search',
-                            success: function (backDate) {
-                                var resHtml = template('tmp_ctg', backDate);
-                                $('tbody').html(resHtml);
+            getcat();
+            /*
+            获取文章分类信息
+            步骤
+            1. 进入页面之后
+            2. 通过ajax获取数据
+            3. 数据获取到之后渲染到页面上
+            1. 结合模板引擎来渲染
+            */
+            $('#model_add').click(function () {
+                // var recipient_id = $('#recipient-id').val();
+                // var recipient_name = $('#recipient-name').val();
+                // var recipient_slug = $('#recipient-slug').val();
+                if ($(this).hasClass('btn-success')) {
+                    // console.log(123);
+                    // 编辑
+                    var data1 = $('form').serialize();
+                    //这个方法首先是jQuery的方法,
+                    //会把form表单里面有name属性的元素的值.拼接成name=value&name2=value2这种格式的字符串
+                    //id=8&name=军事2&slug=junshi   
+                    $.ajax({
+                        type: 'post',
+                        url: 'http://localhost:8000/admin/category_edit',
+                        // data: {
+                        //     id: recipient_id,
+                        //     name: recipient_name,
+                        //     slug: recipient_slug
+                        // },
+                        data:data1,
+                        success: function (backData) {
+                            if (backData.code == 200) {
+                                getcat();
                             }
-                        })
-                    } else {
-                        $('#myModal').modal({
-                            keyboard: true,
-                        })
-                    }
+                        }
+                    })
+                } else {
+                    // console.log(222);
+                    //新增
+                    var recipient_name = $('#recipient-name').val();
+                    var recipient_slug = $('#recipient-slug').val();
+                    $.ajax({
+                        type: 'post',
+                        url: 'http://localhost:8000/admin/category_add',
+                        data: {
+                            name: recipient_name,
+                            slug: recipient_slug
+                        },
+                        success: function (backDate) {
+                            if (backDate.code == 200) {
+                                getcat();
+                            }
+                        }
+                    })
                 }
+                $('#addModal').modal('hide');
+            });
+            /*
+            文章新增
+            步骤
+            1. 点击新增按钮 弹出新增框
+            2. 新增框中输入 name和slug
+            1. 点击取消 关闭
+            2. 点击新增
+                1. 获取数据
+                2. 调用接口
+                3. 响应回来之后
+                4. 重新获取数据
+            */
+
+
+
+            //编辑按钮点击事件
+            $('tbody').on('click', 'a.btn-bj', function () {
+                var id = $(this).attr('data-id');
+                var name = $(this).parent().prev().prev().text();
+                var slug = $(this).parent().prev().text();
+                $('#recipient-id').val(id);
+                $('#recipient-name').val(name);
+                $('#recipient-slug').val(slug);
+                $('#model_add').text('保存').addClass('btn-success');
+                $('#addModal .modal-title').html('修改分类名称');
+                $('#addModal').modal('show');
             })
-            $('#addModal').modal('hide');
-            $('#recipient-name').val('');
-            $('#recipient-slug').val('');
-        });
-        /*
-        文章新增
-        步骤
-        1. 点击新增按钮 弹出新增框
-        2. 新增框中输入 name和slug
-        1. 点击取消 关闭
-        2. 点击新增
-            1. 获取数据
-            2. 调用接口
-            3. 响应回来之后
-            4. 重新获取数据
-        */
+
+            //新增分类按钮点击事件,还原模态框
+            $('#addCategory').on('click', function () {
+                $('#recipient-id').val('');
+                $('#recipient-name').val('');
+                $('#recipient-slug').val('');
+                $('#model_add').text('新增').removeClass('btn-success');
+                $('#addModal .modal-title').html('新增分类');
+            })
 
 
 
-        //编辑按钮点击事件
-        $('tbody').on('click', 'a.btn-bj', function () {
-            var id = $(this).attr('data-id');
-            var name = $(this).parent().prev().prev().text();
-            var slug = $(this).parent().prev().text();
-            $('#recipient-id').val(id);
-            $('#recipient-name').val(name);
-            $('#recipient-slug').val(slug);
-            $('#model_add').addClass('btn-success').text('保存');
-            $('#addModal .modal-title').html('修改分类名称');
-            $('#addModal').modal('show');
-        })
-
-        //新增分类按钮点击事件,还原模态框
-        $('#addModal').on('click', function () {
-            $('#model_add').removeClass('btn-success').text('新增');
-            $('#addModal .modal-title').html('新增分类');
-        })
+            /*
+            分类编辑
+            步骤:
+            1.委托的方式给编辑按钮注册事件. 给编辑按钮设置自定义属性data-id保存要删除的这一条数据的id.
+            点击新增分类按钮  和点击 编辑按钮, 弹出来的模态框是同一个.
+                    点击编辑按钮  弹出的模态框,要修改他的title,还有他的   保存按钮名字,还有样式
+                    点击新增分类按钮,  弹出的模态框 里面的信息要还原.
+            2.弹出的模态框是同一个, 那点击模态框里面的 新增/保存 按钮 就要做判断(是新增还是编辑);
+            3.点击编辑, 把当前编辑的这一条数据的 分类名称  和分类 别名  显示在模态框.
+            4.点击编辑按钮,, 弹出模态框,, 点击模态框中的保存
+                 获取用户修改后的文章类别名称 和别名,  发送ajax请求.修改
+            */
 
 
 
-        /*
-        分类编辑
-        步骤:
-        1.委托的方式给编辑按钮注册事件. 给编辑按钮设置自定义属性data-id保存要删除的这一条数据的id.
-        点击新增分类按钮  和点击 编辑按钮, 弹出来的模态框是同一个.
-        ​       点击编辑按钮  弹出的模态框,要修改他的title,还有他的   保存按钮名字,还有样式
-        ​       点击新增分类按钮,  弹出的模态框 里面的信息要还原.
-        2.弹出的模态框是同一个, 那点击模态框里面的 新增/保存 按钮 就要做判断(是新增还是编辑);
-        3.点击编辑, 把当前编辑的这一条数据的 分类名称  和分类 别名  显示在模态框.
-        4.点击编辑按钮,, 弹出模态框,, 点击模态框中的保存
-        ​    获取用户修改后的文章类别名称 和别名,  发送ajax请求.修改
-        */
-
-
-
-        //删除类别功能
-        $('tbody').on('click', '.btn-del', function () {
-            var id = $(this).attr('data-id');
-            var that = $(this);
-            $.ajax({
-                type: 'post',
-                url: 'http://localhost:8000/admin/category_delete',
-                data: {
-                    id: id
-                },
-                success: function (backData) {
-                    console.log(backData);
-                    if (backData.code == 200) {
-                        that.parent().parent().remove();
+            //删除类别功能
+            $('tbody').on('click', '.btn-del', function () {
+                var id = $(this).attr('data-id');
+                var that = $(this);
+                $.ajax({
+                    type: 'post',
+                    url: 'http://localhost:8000/admin/category_delete',
+                    data: {
+                        id: id
+                    },
+                    success: function (backData) {
+                        if (backData.code == 200) {
+                            that.parent().parent().remove();
+                        }
                     }
-                }
+                })
             })
+            /*
+            分类删除
+            步骤:
+            1.给删除按钮设置点击事件.(删除按钮是模板引擎动态生成的,所以要用委托注册)
+            2.获取当前删除的这条数据(这条文章类别)的id
+            3.发送ajax请求,删除这条数据
+                  删除成功要重新渲染数据:
+                我们用了一个投机的方式,直接把这一条数据给从dom树移除.
+            */
         })
-        /*
-        分类删除
-        步骤:
-        1.给删除按钮设置点击事件.(删除按钮是模板引擎动态生成的,所以要用委托注册)
-        2.获取当前删除的这条数据(这条文章类别)的id
-        3.发送ajax请求,删除这条数据
-        ​	删除成功要重新渲染数据:
-        ​   我们用了一个投机的方式,直接把这一条数据给从dom树移除.
-        */
+
+
+
     </script>
 </body>
 
