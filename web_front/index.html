@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/main.css">
+    <script src="./js/jquery-1.12.4.min.js"></script>
+    <script src="./js/template-web.js"></script>
 </head>
 
 <body>
@@ -215,12 +217,55 @@
             <span>|</span>
             <a href="#">招聘人才</a>
             <span>|</span>
-            <a href="#">友情链接</a>		
+            <a href="#">友情链接</a>
         </div>
-        <p>CopyRight © 2019 深圳大事件信息技术股份有限公司   All Rights Reserved</p>
-        <p>电话：0755-****888    粤ICP备*******8号</p>
+        <p>CopyRight © 2019 深圳大事件信息技术股份有限公司 All Rights Reserved</p>
+        <p>电话：0755-****888 粤ICP备*******8号</p>
     </div>
 
+    <!--热点模板 -->
+    <script id="tmp_hot" type="text/html">
+        {{each data}}
+            {{if $index == 0}}
+            <li class="first">
+            {{else}}
+            <li>
+            {{/if}}
+                <a href="./article.html?id={{$value.id}}"><img src="{{$value.cover}}" alt=""></a>
+                <p>{{$value.title}}</p>
+            </li>
+        {{/each}}
+    </script>
+
+    <script>
+        $(function () {
+            //一进来就发送请求获取最新的五篇文章
+            $.ajax({
+                type: "get",
+                url: 'http://localhost:8000/admin/search',
+                data: {
+                    perpage: 5
+                },
+                success: function (backData) {
+                    var resHtml = template('tmp_hot',backData);
+                    $('.focus_list').html(resHtml);
+                }
+            })
+
+            /*
+            前台页面 - 详情页
+            ​	需求: 点击焦点新闻,希望在新闻详情页看到这个焦点新闻的详细内容.
+            ​    做法:
+            ​      1.先给生成焦点信息的模板里面a标签来一个跳转地址,跳到详情页,并且带过去id
+            ​            a href = "./article.html?id={{v.id}}"
+            ​      2.在详情页如何获取到这个传递过来的id呢?
+            ​           window.location.search  这个属性可以获取 ?和?之后的内容        ?id=237
+            ​           字符串的分割split("=")   后面的就是id.
+            ​      3.获取到id后, 根据id发送ajax请求,拿到这篇文章的详细信息.
+            ​      4.获取到详细信息后,把这些详细信息渲染到详细页面上.
+            */
+        })
+    </script>
 </body>
 
 </html>

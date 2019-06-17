@@ -354,14 +354,13 @@
                             if (zongPage != totalPages) {//如果通过ajax响应回来的数据得到的页面和 刚才的页码不一样
                                 zongPage = totalPages;//那就应该去执行下面的这些代码,重新的生成页码条.
                                 var currentPage = 1; //当前页
-                                
+
                                 $pagination.twbsPagination('destroy');
                                 $pagination.twbsPagination($.extend({}, defaultOpts, {
                                     startPage: currentPage,
                                     totalPages: totalPages
                                 }));
                             }
-
                         }
                     }
                 })
