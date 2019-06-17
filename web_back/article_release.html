@@ -15,6 +15,7 @@
     <script src="js/jedate/js/jedate.js"></script>
     <script src="js/tinymce/js/tinymce/tinymce.min.js"></script>
     <script src="js/tinymce/js/tinymce_setup.js"></script>
+    <script src="./js/template-web.js"></script>
 </head>
 
 <body>
@@ -27,19 +28,20 @@
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">文章标题：</label>
                     <div class="col-sm-10">
-                        <input type="email" class="form-control" id="inputEmail3" placeholder="文章标题">
+                        <input type="text" class="form-control" id="inputEmail3" name="title" placeholder="文章标题">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputPassword3" class="col-sm-2 control-label">文章封面：</label>
                     <div class="col-sm-10">
-                        <input type="file" id="exampleInputFile">
+                        <img src="" alt="" id="fileImg" style="height:200px;"><br>
+                        <input type="file" name="cover" id="exampleInputFile">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">文章类别：</label>
                     <div class="col-sm-4">
-                        <select class="form-control">
+                        <select class="form-control" name="type">
                             <option>1</option>
                             <option>2</option>
                             <option>3</option>
@@ -53,7 +55,7 @@
                     <div class="col-sm-4">
 
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="YYYY-MM-DD" id="dateinput">
+                            <input type="text" class="form-control" placeholder="YYYY-MM-DD" id="dateinput" name="date">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" type="button"
                                     onclick="jeDate('#dateinput',{trigger:false,format: 'YYYY-MM-DD'})"><i
@@ -65,14 +67,14 @@
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">文章内容：</label>
                     <div class="col-sm-10">
-                        <textarea class="form-control" id="rich_content" name="content" placeholder="文章内容">
-                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda fugiat illo nihil molestias ab. Laborum eius non atque, totam sapiente quae obcaecati assumenda ratione inventore pariatur maiores, qui libero delectus.
+                        <textarea class="form-control" id="rich_content" placeholder="文章内容">
+                            
                             </textarea>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
-                        <button type="submit" class="btn btn-success">发布</button>
+                        <button type="submit" class="btn btn-success btn-fb">发布</button>
                         <button type="submit" class="btn btn-default">存为草稿</button>
                     </div>
                 </div>
@@ -80,6 +82,65 @@
         </div>
     </div>
 
+    <script id="tmp_sel" type="text/html">
+        {{each data}}
+        <option value="{{$value.id}}">{{$value.name}}</option>
+        {{/each}}
+    </script>
+
+    <script>
+        $(function(){
+            //一进来获取文章类别显示在下拉框中
+            $.ajax({
+                type: 'get',
+                url: 'http://localhost:8000/admin/category_search',
+                success: function (backData) {
+                    if (backData.code == 200) {
+                        var resHtml = template('tmp_sel', backData);
+                        $('.form-control').html(resHtml);
+                    }
+                }
+            })
+
+
+            //图片预览功能
+            //给选择文件一个改变事件
+            $('#exampleInputFile').on('change',function(){
+                //拿到选中文件
+                var icon = this.files[0];
+                //找到这个文件的url
+                var url = URL.createObjectURL(icon);
+                document.getElementById('fileImg').setAttribute('src',url);
+            })
+
+
+            //发布按钮点击事件
+            $('.btn-fb').on('click',function(e){
+                e.preventDefault();
+                var formData = new FormData($('form')[0]);
+                formData.append('content',tinyMCE.activeEditor.getContent());
+                formData.append('state','已发布');
+                //发送ajax请求
+                $.ajax({
+                    type:'post',
+                    url:'http://localhost:8000/admin/article_publish',
+                    data:formData,
+                    contentType:false,
+                    processData:false,
+                    success:function(backData){
+                        console.log(backData);
+                    }
+                })
+            })
+            /*
+            文章新增-点击发布
+            1.点击发布按钮 , 发送ajax请求,生成文章.
+            ​	注意: 后端需要的是formData格式的数据.
+            ​   保证form表单中的每一个标签都有name属性, name属性的值刚好是接口的参数.
+            ​   富文本通过value获取不到值.所以不需要添加name属性,  可以在后面用append方法把富文本的内容追加到formData中.
+            */
+        })
+    </script>
 </body>
 
 </html>
